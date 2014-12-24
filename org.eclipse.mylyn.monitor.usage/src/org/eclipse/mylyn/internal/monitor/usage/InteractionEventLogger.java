@@ -52,28 +52,39 @@ public class InteractionEventLogger extends AbstractMonitorLog implements IInter
 
 	private final List<InteractionEvent> queue = new CopyOnWriteArrayList<InteractionEvent>();
 
-	private final InteractionEventObfuscator handleObfuscator = new InteractionEventObfuscator();
+//	private final InteractionEventObfuscator handleObfuscator = new InteractionEventObfuscator();
 
 	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S z", Locale.ENGLISH); //$NON-NLS-1$
+
+	private final ConachangConnector connector = new ConachangConnector();
 
 	public InteractionEventLogger(File outputFile) {
 		this.outputFile = outputFile;
 	}
 
+	/**
+	 */
 	public synchronized void interactionObserved(InteractionEvent event) {
-//		System.err.println("> " + event); //$NON-NLS-1$
+		//System.err.println("> " + event); //$NON-NLS-1$
+
 		if (UiUsageMonitorPlugin.getDefault() == null) {
 			StatusHandler.log(new Status(IStatus.WARNING, UiUsageMonitorPlugin.ID_PLUGIN,
 					"Attempted to log event before usage monitor start")); //$NON-NLS-1$
 		}
+
+		//To obtain actual file location, Obfuscation cannot be done.
+		/*
 		if (UiUsageMonitorPlugin.getDefault().isObfuscationEnabled()) {
 			String obfuscatedHandle = handleObfuscator.obfuscateHandle(event.getStructureKind(),
 					event.getStructureHandle());
 			event = new InteractionEvent(event.getKind(), event.getStructureKind(), obfuscatedHandle,
 					event.getOriginId(), event.getNavigation(), event.getDelta(), event.getInterestContribution());
 		}
+		 */
 		try {
 			if (started) {
+				connector.newEvent(event);
+
 				String xml = getXmlForEvent(event);
 				if (outputStream != null) {
 					outputStream.write(xml.getBytes());
@@ -95,6 +106,8 @@ public class InteractionEventLogger extends AbstractMonitorLog implements IInter
 			interactionObserved(queuedEvent);
 		}
 		queue.clear();
+
+		connector.startMonitoring();
 	}
 
 	@Override
@@ -104,6 +117,8 @@ public class InteractionEventLogger extends AbstractMonitorLog implements IInter
 			UiUsageMonitorPlugin.getDefault().incrementObservedEvents(eventAccumulartor);
 		}
 		eventAccumulartor = 0;
+
+		connector.stopMonitoring();
 	}
 
 	private String getXmlForEvent(InteractionEvent event) {
@@ -154,7 +169,7 @@ public class InteractionEventLogger extends AbstractMonitorLog implements IInter
 				fileLength = file.length();
 			}
 
-			//450: the approximate size of an event in XML 
+			//450: the approximate size of an event in XML
 			int numberOfEventsEstimate = (int) (fileLength / 450);
 
 			monitor.beginTask(Messages.InteractionEventLogger_Reading_History_From_File, numberOfEventsEstimate);
