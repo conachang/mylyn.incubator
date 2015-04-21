@@ -49,7 +49,7 @@ public class ConachangConnector {
 	 * The constructor
 	 */
 	public ConachangConnector() {
-		lastFileStructureHandle = new StructureHandle();
+		lastFileStructureHandle = null;
 	}
 
 	/**
@@ -69,7 +69,7 @@ public class ConachangConnector {
 			}
 			if (event.getKind() == Kind.SELECTION
 					|| (event.getKind() == Kind.EDIT && !lastFileStructureHandle.equals(sh))) {
-				if (!lastFileStructureHandle.isEmpty()) {
+				if (lastFileStructureHandle != null) {
 					recordInteraction();
 				}
 				lastFileStructureHandle = sh;
@@ -84,10 +84,10 @@ public class ConachangConnector {
 					|| event.getOriginId().startsWith("org.eclipse.debug.ui")//Ctrl+Shift+F11 (Run) //$NON-NLS-1$
 					|| event.getOriginId().startsWith("org.eclipse.debug.internal.ui.actions"))//RunIcon, Menubar->Run //$NON-NLS-1$
 			{
-				if (!lastFileStructureHandle.isEmpty()) {
+				if (lastFileStructureHandle != null) {
 					recordInteraction();
 				}
-				lastFileStructureHandle = new StructureHandle();
+				lastFileStructureHandle = null;
 				lastFileHashCode = 0;
 				editTime.clear();
 			}
@@ -98,7 +98,7 @@ public class ConachangConnector {
 		ITask task = TasksUi.getTaskActivityManager().getActiveTask();
 		if (task != null && !InteractionRecorder.isActive()) {
 			InteractionRecorder.taskStarted(task);
-			lastFileStructureHandle = new StructureHandle();
+			lastFileStructureHandle = null;
 			editTime.clear();
 		} else if (task == null && InteractionRecorder.isActive()) {
 			InteractionRecorder.taskStopped();
@@ -128,7 +128,7 @@ public class ConachangConnector {
 	 * @return return true if and only if the previous interacted file was changed.
 	 */
 	private boolean isFileChanged(StructureHandle lastFileStructureHandle, int lastFileHashCode) {
-		if (lastFileHashCode == 0 || lastFileStructureHandle.isEmpty()) {
+		if (lastFileHashCode == 0 || lastFileStructureHandle == null) {
 			return false;
 		}
 		if (lastFileHashCode != getHashCode(lastFileStructureHandle)) {
@@ -171,7 +171,7 @@ public class ConachangConnector {
 	public void startMonitoring() {
 		isNeedToRecord = true;
 		lastFileHashCode = 0;
-		lastFileStructureHandle = new StructureHandle();
+		lastFileStructureHandle = null;
 		InteractionRecorder.startMonitoring();
 		ITask task = TasksUi.getTaskActivityManager().getActiveTask();
 		if (task != null) {
@@ -189,7 +189,7 @@ public class ConachangConnector {
 		}
 		if (isNeedToRecord) {
 			lastFileHashCode = 0;
-			lastFileStructureHandle = new StructureHandle();
+			lastFileStructureHandle = null;
 			editTime.clear();
 			InteractionRecorder.stopMonitoring();
 			isNeedToRecord = false;
