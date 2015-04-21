@@ -68,7 +68,7 @@ public class ConachangConnector {
 				return;
 			}
 			if (event.getKind() == Kind.SELECTION
-					|| (event.getKind() == Kind.EDIT && !lastFileStructureHandle.equals(sh))) {
+					|| (event.getKind() == Kind.EDIT && !sh.equals(lastFileStructureHandle))) {
 				if (lastFileStructureHandle != null) {
 					recordInteraction();
 				}
@@ -202,7 +202,7 @@ public class ConachangConnector {
 		LinkedList<Date> recordEditTime = (LinkedList<Date>) editTime.clone();
 		ConachangRecordContent content = new ConachangRecordContent(lastFileStructureHandle, recordEditTime,
 				isFileChanged(lastFileStructureHandle, lastFileHashCode) ? EventType.WRITE : EventType.READ,
-						new String());
+				new String());
 		InteractionRecorder.receiveInteractionFromMylyn(content);
 		//InteractionRecorder.recordInteraction(lastFileStructureHandle, editTime,
 		//isFileChanged(lastFileStructureHandle, lastFileHashCode) ? EventType.WRITE : EventType.READ,
